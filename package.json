@@ -1,0 +1,11 @@
+{
+  "name": "mapdown-ocr",
+  "version": "1.0.0",
+  "description": "an ocr application of MapDown Web App.",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "BenThomson",
+  "license": "MIT"
+}
