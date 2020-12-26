@@ -1,11 +1,42 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Document</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.4/dist/tesseract.min.js"></script>
 </head>
-<body>
 
+<body>
+  <div id="app">
+    <p class="status">状态：{{ status }}</p>
+    <div>
+      <label for="file">进度:</label>
+      <progress id="file" max="1" :value="progress">{{ progress * 100 }}</progress>
+    </div>
+    <p>可用的语言：</p>
+    <div v-for="item of language" :key="item.value">
+      <input type="checkbox" :id="item.value" :value="item.value" v-model="selectedLang">
+      <label :for="item.value">{{item.name}}</label>
+    </div>
+    <button @click="initWorker" :disabled="!initReady">确定，并初始化引擎</button>
+    <div>
+      <label for="image_upload">选择图片：</label>
+      <input id="image_upload" type="file" accept="image/*" @change="inputChange">
+    </div>
+    <button @click="openCamera">开启摄像头</button>
+    <video v-if="camera" autoplay ref='video' @></video>
+    <canvas style="display:none" ref='canvas'></canvas>
+    <button @click="takeSnap">拍照</button>
+    <button @click="changeFront">切换摄像头</button>
+    <img class="thumb" :src="image" alt="">
+    <button @click="startOCR" :disabled="!ocrReady">OCR 识别</button>
+    <p id="content">{{content}}</p>
+  </div>
+  <script src="app.js"></script>
 </body>
+
 </html>

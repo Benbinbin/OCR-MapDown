@@ -4,3 +4,25 @@ body {
   padding: 0;
   box-sizing: border-box;
 }
+
+.thumb {
+  display: block;
+  width: 50%;
+  margin: 10px auto;
+}
+
+button {
+  padding: 5px;
+  border-radius: 5%;
+  background: orange;
+  color: white;
+}
+
+button:disabled {
+  background: gray;
+}
+
+video {
+  display: block;
+  width: 80%;
+}
