@@ -3,12 +3,18 @@ const languageMap = {
   'chi_sim': '简体中文',
   'chi_tra': '繁体中文'
 }
+
 new Vue({
   el: '#app',
   data: {
     worker: null,
+    fxCanvas: null,
+    texture: null,
+    brightness: 0,
+    contrast: 0,
+    radius: 0,
+    strength: 0,
     image: null,
-    snapshot: null,
     camera: false,
     status: 'unload',
     progress: 0,
@@ -36,13 +42,18 @@ new Vue({
     inputChange(event) {
       if (event.target.files) {
         let file = event.target.files[0];
+        console.log(file);
         const reader = new FileReader();
-        reader.onload = (e) => {
-          console.log(e);
-          this.image = e.target.result;
-          this.imageReady = true;
-        };
+        // read file to canvas
         reader.readAsDataURL(file);
+        reader.onload = (e) => {
+          let img = new Image();
+          img.src = e.target.result;
+          img.onload = () => {
+            this.initialFxCanvas(img);
+          }
+        };
+
       }
     },
     openCamera() {
@@ -62,18 +73,28 @@ new Vue({
           console.log('oops!!!' + err)
         })
     },
-    changeFront() {
-      this.front = !this.front;
-    },
+    // changeFront() {
+    //   this.front = !this.front;
+    // },
     takeSnap() {
-      let width = this.$refs.video.videoWidth;
-      let height = this.$refs.video.videoHeight;
-      this.$refs.canvas.width = width;
-      this.$refs.canvas.height = height;
-      console.log(width, height);
-      let ctx = this.$refs.canvas.getContext('2d');
-      ctx.drawImage(this.$refs.video, 0, 0, width, height);
-      this.image = this.$refs.canvas.toDataURL();
+      this.initialFxCanvas(this.$refs.video)
+    },
+    initialFxCanvas(source) {
+      // Initialize Image Editor
+      try {
+        this.fxCanvas = fx.canvas();
+        this.texture = this.fxCanvas.texture(source);
+        this.fxCanvas.draw(this.texture).update();
+        this.image = this.fxCanvas.toDataURL();
+        this.imageReady = true;
+      } catch (e) {
+        console.log('oops!!!' + e)
+        return;
+      }
+    },
+    editImage() {
+      this.fxCanvas.draw(this.texture).brightnessContrast(this.brightness, this.contrast).unsharpMask(this.radius, this.strength).update();
+      this.image = this.fxCanvas.toDataURL();
       this.imageReady = true;
     },
     initWorker() {
@@ -103,7 +124,7 @@ new Vue({
     }
   },
   created() {
-    // let vm = this;
+    // OCR Worker
     this.worker = Tesseract.createWorker({
       logger: (msg) => {
         // Add logger here
@@ -135,43 +156,3 @@ new Vue({
       })
   }
 })
-
-
-// const imageSource = './images/test/source.jpg';
-
-// document.querySelector('#source').src = imageSource;
-// const text = document.querySelector('#text');
-
-// const video = document.querySelector('.player');
-// const canvas = document.querySelector('.photo');
-// const ctx = canvas.getContext('2d');
-
-// const snap = document.querySelector('.snap')
-
-
-// OCR
-// const worker = Tesseract.createWorker({
-//   logger: m => console.log(m)
-// });
-// Tesseract.setLogging(true);
-// work();
-
-// async function work() {
-//   await worker.load();
-//   await worker.loadLanguage('eng+chi_sim');
-//   await worker.initialize('eng+chi_sim');
-
-//   let result = await worker.detect(exampleImage);
-//   console.log('Detect Data: ', result.data);
-//   console.log('---');
-
-//   result = await worker.recognize(exampleImage);
-//   if (result.data.text) {
-//     let trimText = result.data.text.split(" ").join("")
-//     text.innerHTML = trimText;
-//   }
-//   console.log(result.data);
-
-
-//   await
-// }
