@@ -213,25 +213,29 @@ Vue.component("tab-engine", {
       type: Number,
       default: 0,
     },
+    initialized: {
+      type: Boolean,
+      default: false,
+    }
   },
   data() {
     return {
-      worker: null,
       languageLists: languageLists,
       languageOptions: languageOptions,
       selectedLanguage: ['chi_sim'],
+      initializing: false,
     }
   },
-  computed: {
-    progressPercent() {
-      return `${this.progress * 100}%`
+  watch: {
+    initialized() {
+      this.initializing = false;
     }
   },
   template: `
     <div>
       <h2 class="text-center mt-5 mb-3">选择语言</h2>
       <div class="d-flex justify-content-center">
-        <p class="badge bg-secondary text-wrap text-center" >选择识别图片中所含文字的语言（可以多选），以下载相应的训练数据集，选择的语种越多所需下载的数据集越大。</p>
+        <p class="badge bg-secondary text-wrap lh-base">选择识别图片中所含文字的语言（可以多选），以下载相应的训练数据集，选择的语种越多所需下载的数据集越大。每次添加语音请初始化引擎。</p>
       </div>
 
       <div>
@@ -253,14 +257,12 @@ Vue.component("tab-engine", {
         </span>
       </div>
 
+      <button type="button" class="btn btn-primary d-block mx-auto m-3" @click="init" :disabled="initializing">初始化引擎</button>
 
-      <button type="button" class="btn btn-outline-primary d-block mx-auto m-3" @click="init">初始化引擎</button>
+      <p class="text-center">状态：{{ status }}</p>
 
-      <div v-if="status">
-        <p class="status">状态：{{ status }}</p>
-        <div class="progress">
-          <div class="progress-bar" role="progressbar" :style="{width: progressPercent}"  aria-valuemin="0" aria-valuemax="1">{{ progressPercent }}</div>
-        </div>
+      <div v-if="status === '引擎初始化结束'">
+        <button type="button" class="btn btn-success d-block mx-auto m-3" @click="$emit('next-step', 'tab-image')" >下一步</button>
       </div>
 
     </div>
@@ -268,8 +270,9 @@ Vue.component("tab-engine", {
   methods: {
     init() {
       let language = this.selectedLanguage.join('+');
-      this.$emit('init-worker', language)
-    }
+      this.$emit('init-worker', language);
+      this.initializing = true;
+    },
   },
 });
 
@@ -286,7 +289,7 @@ Vue.component("tab-image", {
       texture: null,
       brightness: 0,
       contrast: 0,
-      radius: 0,
+      radius: 5,
       strength: 0,
       // skew: false,
       // top: {
@@ -327,7 +330,7 @@ Vue.component("tab-image", {
     <div v-show="snapshot">
       <div class="mt-3">
         <button type="button" class="btn btn-danger my-2 d-block mx-auto" @click="removeImage">删除图片</button>
-        <img class="thumb mx-auto" :src="snapshot" alt="" ref="thumb">
+        <img class="thumb border border-3 rounded-3 mx-auto" :src="snapshot" alt="" ref="thumb">
       </div>
 
       <div class="image-controllers m-3 row">
@@ -462,7 +465,8 @@ Vue.component("tab-image", {
     // skewImage() {
     // },
     start() {
-      this.$emit('start', this.snapshot)
+      this.$emit('start', this.snapshot);
+      this.$emit('next-step', 'tab-result');
     }
   }
 });
@@ -493,22 +497,26 @@ Vue.component("tab-result", {
   },
   computed: {
     progressPercent() {
-      return `${this.progress * 100}%`
+      return `${(this.progress * 100).toFixed(2)}%`
     }
   },
   template: `
     <div>
       <div v-if="status">
-        <p class="status">状态：{{ status }}</p>
-        <div class="progress">
-          <div class="progress-bar" role="progressbar" :style="{width: progressPercent}"  aria-valuemin="0" aria-valuemax="1">{{ progressPercent }}</div>
+        <p>状态：{{ status }}</p>
+        <div class="d-flex align-items-center">
+          <p class="my-0">进度：</p>
+          <div class="progress flex-grow-1">
+            <div class="progress-bar" role="progressbar" :style="{width: progressPercent}"  aria-valuemin="0" aria-valuemax="1">{{ progressPercent }}</div>
+          </div>
         </div>
+
       </div>
       <div class="mt-3">
-        <img class="thumb mx-auto" :src="image">
+        <img class="thumb border border-3 rounded-3 mx-auto" :src="image">
       </div>
-
       <h2 class="text-center my-3">识别结果</h2>
+      <hr/>
       <p id="content">{{content}}</p>
 
     </div>
@@ -519,9 +527,10 @@ new Vue({
   el: '#app',
   data: {
     image: null,
-    status: '',
+    status: '引擎未初始化',
     content: '',
     progress: 0,
+    worker: null,
     engineReady: false,
     imageReady: false,
     currentTabComponent: 'tab-result'
@@ -551,31 +560,28 @@ new Vue({
       });
       this.worker.load()
         .then((result) => {
-          // preload English, Chinese - Simplified, Chinese - Traditional data
           return this.worker.loadLanguage(language);
         })
         .then(() => {
           return this.worker.initialize(language)
         })
         .then(() => {
-          this.status = '引擎加载完毕'
-          this.engineReady = true
+          this.status = '引擎初始化结束';
+          this.engineReady = true;
         })
         .catch(err => {
           console.log('oops!!!' + err)
         })
     },
     startOCR(snapshot) {
-      this.image = snapshot
+      this.imageReady = true;
+      this.image = snapshot;
+      this.progress = 0;
       this.worker.recognize(snapshot)
         .then(result => {
           this.content = result.data.text.replace(/\s*/g, "");
           this.status = '识别完成';
         })
-        // .then(() => {
-        //   this.worker.terminate();
-        //   this.status = 'finish'
-        // })
         .catch(err => {
           console.log('oops!!!' + err)
         })

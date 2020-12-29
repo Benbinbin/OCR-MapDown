@@ -24,32 +24,25 @@
         <a class="nav-link" :class="{active: currentTabComponent === 'tab-engine' ? true : false}" href="#"
           @click="setTab('tab-engine')">设置引擎</a>
       </li>
-      <!-- <li class="nav-item">
+
+      <li class="nav-item">
         <a class="nav-link" href="#"
           :class="{active: currentTabComponent === 'tab-image' ? true : false, disabled: !engineReady}" href="#"
           @click="setTab('tab-image')">添加图片</a>
-      </li> -->
-      <li class="nav-item">
-        <a class="nav-link" href="#"
-          :class="{active: currentTabComponent === 'tab-image' ? true : false, disabled:false}" href="#"
-          @click="setTab('tab-image')">添加图片</a>
       </li>
-      <!-- <li class="nav-item">
+
+      <li class="nav-item">
         <a class="nav-link" href="#"
           :class="{active: currentTabComponent === 'tab-result' ? true : false, disabled: !engineReady || !imageReady}"
           href="#" @click="setTab('tab-result')">结果</a>
-      </li> -->
-      <li class="nav-item">
-        <a class="nav-link" href="#"
-          :class="{active: currentTabComponent === 'tab-result' ? true : false, disabled: false}" href="#"
-          @click="setTab('tab-result')">结果</a>
       </li>
+
     </ul>
     <hr>
     <!--  component -->
     <keep-alive>
-      <component v-bind:is="currentTabComponent" @init-worker="initWorker" @start="startOCR" :progress="progress"
-        :status="status" :image="image" :content="content">
+      <component v-bind:is="currentTabComponent" @init-worker="initWorker" @start="startOCR" :initialized="engineReady" :progress="progress"
+        :status="status" :image="image" :content="content" @next-step="setTab">
       </component>
     </keep-alive>
 
