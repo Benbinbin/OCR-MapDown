@@ -533,7 +533,7 @@ new Vue({
     worker: null,
     engineReady: false,
     imageReady: false,
-    currentTabComponent: 'tab-result'
+    currentTabComponent: 'tab-engine'
   },
   computed: {
     ocrReady() {
