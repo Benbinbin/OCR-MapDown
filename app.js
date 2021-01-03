@@ -353,6 +353,18 @@ Vue.component("tab-image", {
       newCoordinate: [0, 0, 0, 0, 0, 0, 0, 0]
     }
   },
+  watch: {
+    imgTempSrc() {
+      if (this.imgTempSrc) {
+        this.width = this.fxCanvas.width;
+        this.height = this.fxCanvas.height;
+        this.$refs.canvas.width = this.width;
+        this.$refs.canvas.height = this.height;
+        let ctx = this.$refs.canvas.getContext('2d');
+        ctx.drawImage(this.fxCanvas, 0, 0, this.width, this.height);
+      }
+    },
+  },
   template: `
   <div>
     <div v-show="!imgTempSrc">
@@ -378,7 +390,7 @@ Vue.component("tab-image", {
       <div class="row">
         <div class="col-12 col-lg-8 text-center mw-100">
           <div class="canvas-container position-relative d-inline-block" ref="container" @mousemove="move" @touchmove="move" @mouseup="startDrag = false" @touchend="startDrag = false">
-            <canvas class="mw-100 d-block" ref="canvas"></canvas>
+            <canvas class="mw-100 d-block img-temp" ref="canvas"></canvas>
             <div class="dot a" @mousedown="setDrag" @touchstart="setDrag" ref="a" v-show="showSkewController"></div>
             <div class="dot b" @mousedown="setDrag" @touchstart="setDrag" ref="b" v-show="showSkewController"></div>
             <div class="dot c" @mousedown="setDrag" @touchstart="setDrag" ref="c" v-show="showSkewController"></div>
@@ -386,13 +398,20 @@ Vue.component("tab-image", {
           </div>
         </div>
 
-        <div class="col-12 col-lg-4 d-flex flex-column align-items-center px-3">
-          <div class="btn-group mb-2">
+        <div class="col-12 col-lg-4 px-3" v-show="!showSkewController">
+          <div class="btn-group w-100 mb-2">
             <button type="button" class="btn btn-success btn-sm" @click="start">开始识别</button>
             <button type="button" class="btn btn-outline-danger btn-sm" @click="reset">重置修改</button>
             <button type="button" class="btn btn-outline-danger btn-sm" @click="removeImage">删除图片</button>
           </div>
           <div class="editor-container">
+            <div>
+              <p class="lh-lg">打开 <button type="button" class="btn btn-primary btn-sm" @click="imageEditor">Filerobot</button> 对图片旋转、裁剪；对于文字在非平面的图片进行 <button type="button" class="btn btn-primary btn-sm" @click="initSkewController">扭曲矫正</button> <a class="text-primary" tabindex="0" data-bs-toggle="popover" data-bs-trigger="focus" title="为何及如何编辑图片" data-bs-content="<ul><li>调整亮度、对比度、锐化让文字清晰，以提高识别正确率。</li><li>开启 Filerobot 图形编辑器对图片的方向、角度进行调整，或进行扭曲矫正，让图片中的文字水平</li><li>开启 Filerobot 图形编辑器裁剪图片，只保留需要识别文字的区域以缩短识别时间。</li></ul>" ref="popover"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-question-circle" viewBox="0 0 16 16">
+                  <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                  <path d="M5.255 5.786a.237.237 0 0 0 .241.247h.825c.138 0 .248-.113.266-.25.09-.656.54-1.134 1.342-1.134.686 0 1.314.343 1.314 1.168 0 .635-.374.927-.965 1.371-.673.489-1.206 1.06-1.168 1.987l.003.217a.25.25 0 0 0 .25.246h.811a.25.25 0 0 0 .25-.25v-.105c0-.718.273-.927 1.01-1.486.609-.463 1.244-.977 1.244-2.056 0-1.511-1.276-2.241-2.673-2.241-1.267 0-2.655.59-2.75 2.286zm1.557 5.763c0 .533.425.927 1.01.927.609 0 1.028-.394 1.028-.927 0-.552-.42-.94-1.029-.94-.584 0-1.009.388-1.009.94z"/>
+                </svg></a>
+              </p>
+            </div>
             <div class="row w-100">
               <div class="col-6 col-lg-12">
                 <label for="brightness" class="form-label d-block">亮度：{{ brightness }}</label>
@@ -415,17 +434,27 @@ Vue.component("tab-image", {
                   @change="filter">
               </div>
             </div>
+          </div>
+        </div>
 
-            <!-- <button class="skew" @click="skewImage">扭曲矫正</button> -->
-            <div>
-              <p>点击打开 <button type=" button" class="btn btn-primary btn-sm" @click="imageEditor">Filerobot 编辑器</button> 进行更精细的图片编辑（旋转、裁剪）。<a class="text-primary" tabindex="0" data-bs-toggle="popover" data-bs-trigger="focus" title="为何及如何编辑图片" data-bs-content="<ul><li>调整亮度、对比度、锐化让文字清晰，以提高识别正确率。</li><li>开启 Filerobot 编辑器进行图片方向、角度调整，让图片中的文字水平；如果图片中文本并非在平面上，可以使用扭曲矫正。</li><li>开启 Filerobot 图形编辑器，裁剪图片只保留需要识别文字的区域以缩短识别时间。</li></ul>" ref="popover"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-question-circle" viewBox="0 0 16 16">
-                  <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
-                  <path d="M5.255 5.786a.237.237 0 0 0 .241.247h.825c.138 0 .248-.113.266-.25.09-.656.54-1.134 1.342-1.134.686 0 1.314.343 1.314 1.168 0 .635-.374.927-.965 1.371-.673.489-1.206 1.06-1.168 1.987l.003.217a.25.25 0 0 0 .25.246h.811a.25.25 0 0 0 .25-.25v-.105c0-.718.273-.927 1.01-1.486.609-.463 1.244-.977 1.244-2.056 0-1.511-1.276-2.241-2.673-2.241-1.267 0-2.655.59-2.75 2.286zm1.557 5.763c0 .533.425.927 1.01.927.609 0 1.028-.394 1.028-.927 0-.552-.42-.94-1.029-.94-.584 0-1.009.388-1.009.94z"/>
-                </svg></a>
-              </p>
-            </div>
+        <div class="col-12 col-lg-4 px-3" v-show="showSkewController">
+          <div v-show="showSkewController && !skewReady" class="text-center">
+            <p class="text-center">设定锚点的初始位置</p>
+            <button type="button" class="btn btn-success btn-sm" @click="skewReady = true">下一步</button>
+            <button type="button" class="btn btn-outline-danger btn-sm" @click="resetCoordinate">重置锚点</button>
+            <button type="button" class="btn btn-outline-danger btn-sm" @click="cancelSkew">取消</button>
           </div>
 
+          <div v-show="showSkewController && skewReady">
+            <p>矫正图片：</p>
+            <button type="button" class="btn btn-success btn-sm" @click="finishSkew">完成</button>
+            <button type="button" class="btn btn-primary btn-sm" @click="skewToBoundary">置界 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-bounding-box-circles" viewBox="0 0 16 16">
+                <path d="M2 1a1 1 0 1 0 0 2 1 1 0 0 0 0-2zM0 2a2 2 0 0 1 3.937-.5h8.126A2 2 0 1 1 14.5 3.937v8.126a2 2 0 1 1-2.437 2.437H3.937A2 2 0 1 1 1.5 12.063V3.937A2 2 0 0 1 0 2zm2.5 1.937v8.126c.703.18 1.256.734 1.437 1.437h8.126a2.004 2.004 0 0 1 1.437-1.437V3.937A2.004 2.004 0 0 1 12.063 2.5H3.937A2.004 2.004 0 0 1 2.5 3.937zM14 1a1 1 0 1 0 0 2 1 1 0 0 0 0-2zM2 13a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm12 0a1 1 0 1 0 0 2 1 1 0 0 0 0-2z" />
+              </svg>
+            </button>
+            <button type="button" class="btn btn-outline-danger btn-sm" @click="restSkew">重置变形</button>
+            <button type="button" class="btn btn-outline-danger btn-sm" @click="cancelSkew">取消</button>
+          </div>
         </div>
 
       </div>
@@ -433,18 +462,6 @@ Vue.component("tab-image", {
     </div>
   </div>
   `,
-  watch: {
-    imgTempSrc() {
-        if (this.imgTempSrc) {
-          this.width = this.fxCanvas.width;
-          this.height = this.fxCanvas.height;
-          this.$refs.canvas.width = this.width;
-          this.$refs.canvas.height = this.height;
-          let ctx = this.$refs.canvas.getContext('2d');
-          ctx.drawImage(this.fxCanvas, 0, 0, this.width, this.height);
-        }
-      },
-  },
   methods: {
     // 输入图片
     inputImg(event) {
@@ -523,15 +540,160 @@ Vue.component("tab-image", {
         return;
       }
     },
-    setDrag() {
-
-    },
-    move() {
-
-    },
     filter() {
       this.fxCanvas.draw(this.texture).brightnessContrast(this.brightness, this.contrast).unsharpMask(this.radius, this.strength).update();
       this.imgTempSrc = this.fxCanvas.toDataURL();
+    },
+    setDrag(event) {
+      this.dragTarget = event.srcElement;
+      this.startDrag = true;
+    },
+    initSkewController() {
+      this.showSkewController = true;
+      this.resetCoordinate();
+    },
+    resetCoordinate() {
+      let { width, height } = this.getELemCoords(this.$refs.container);
+      this.$refs.a.style.top = `${height * 0.1}px`;
+      this.$refs.a.style.left = `${width * 0.1}px`;
+      this.$refs.b.style.top = `${height * 0.1}px`;
+      this.$refs.b.style.left = `${width * 0.9 - this.controllerRadius}px`;
+      this.$refs.c.style.top = `${height * 0.9 - this.controllerRadius}px`;
+      this.$refs.c.style.left = `${width * 0.9 - this.controllerRadius}px`
+      this.$refs.d.style.top = `${height * 0.9 - this.controllerRadius}px`;
+      this.$refs.d.style.left = `${width * 0.1}px`;
+      let coordinate = [
+        this.getDotCoords('a').x,
+        this.getDotCoords('a').y,
+        this.getDotCoords('b').x,
+        this.getDotCoords('b').y,
+        this.getDotCoords('c').x,
+        this.getDotCoords('c').y,
+        this.getDotCoords('d').x,
+        this.getDotCoords('d').y,
+      ];
+      this.originCoordinate = coordinate;
+    },
+    move(event) {
+      if (!this.startDrag) return;
+      // 计算 dot 相对于 canvas-container 的坐标
+      let { width, height, containerX, containerY } = this.getELemCoords(this.$refs.container)
+      let x = 0,
+        y = 0;
+      if (event.type === 'touchmove') {
+        let touch = event.touches[0];
+        x = touch.pageX - containerX - this.controllerRadius / 2;
+        y = touch.pageY - containerY - this.controllerRadius / 2;
+      } else {
+        x = event.pageX - containerX - this.controllerRadius / 2;
+        y = event.pageY - containerY - this.controllerRadius / 2;
+      }
+
+      // 限制 dot 移动范围
+      if (x >= 0 && x + this.controllerRadius <= width) {
+        this.dragTarget.style.left = `${x}px`;
+      } else if (x < 0) {
+        this.dragTarget.style.left = '0'
+      } else if (x + this.controllerRadius > width) {
+        this.dragTarget.style.left = `${width - this.controllerRadius}px`
+      }
+
+      if (y >= 0 && y + this.controllerRadius <= height) {
+        this.dragTarget.style.top = `${y}px`;
+      } else if (y < 0) {
+        this.dragTarget.style.top = '0'
+      } else if (y + this.controllerRadius > width) {
+        this.dragTarget.style.top = `${height - this.controllerRadius}px`
+      }
+
+      let coordinate = [
+        this.getDotCoords('a').x,
+        this.getDotCoords('a').y,
+        this.getDotCoords('b').x,
+        this.getDotCoords('b').y,
+        this.getDotCoords('c').x,
+        this.getDotCoords('c').y,
+        this.getDotCoords('d').x,
+        this.getDotCoords('d').y,
+      ];
+
+      // 基于状态判断 dot 移动时选择执行的操作
+      if (this.skewReady) {
+        this.skew(this.originCoordinate, coordinate)
+      } else {
+        this.originCoordinate = coordinate
+      }
+    },
+    getELemCoords(elem) {
+      let box = elem.getBoundingClientRect();
+
+      return {
+        width: box.width,
+        height: box.height,
+        containerX: box.left + window.pageXOffset,
+        containerY: box.top + window.pageYOffset,
+      };
+    },
+    getDotCoords(dot) {
+      let x = parseFloat(this.$refs[dot].style.left);
+      let y = parseFloat(this.$refs[dot].style.top);
+      // console.log(dot, x, y)
+      return {
+        x,
+        y
+      }
+    },
+    skew(originCoordinate, newCoordinate) {
+      this.fxCanvas.draw(this.texture).perspective(originCoordinate, newCoordinate).update();
+      this.imgTempSrc = this.fxCanvas.toDataURL();
+    },
+    skewToBoundary() {
+      let { width, height } = this.getELemCoords(this.$refs.container)
+      this.$refs.a.style.top = `0px`;
+      this.$refs.a.style.left = `0px`;
+      this.$refs.b.style.top = `0px`;
+      this.$refs.b.style.left = `${width - this.controllerRadius}px`;
+      this.$refs.c.style.top = `${height - this.controllerRadius}px`;
+      this.$refs.c.style.left = `${width - this.controllerRadius}px`;
+      this.$refs.d.style.top = `${height - this.controllerRadius}px`;
+      this.$refs.d.style.left = `0px`;
+      let coordinate = [
+        this.getDotCoords('a').x,
+        this.getDotCoords('a').y,
+        this.getDotCoords('b').x,
+        this.getDotCoords('b').y,
+        this.getDotCoords('c').x,
+        this.getDotCoords('c').y,
+        this.getDotCoords('d').x,
+        this.getDotCoords('d').y,
+      ];
+      // console.log(coordinate);
+      this.skew(this.originCoordinate, coordinate)
+    },
+    restSkew() {
+      this.$refs.a.style.left = `${this.originCoordinate[0]}px`;
+      this.$refs.a.style.top = `${this.originCoordinate[1]}px`;
+      this.$refs.b.style.left = `${this.originCoordinate[2]}px`;
+      this.$refs.b.style.top = `${this.originCoordinate[3]}px`;
+      this.$refs.c.style.left = `${this.originCoordinate[4]}px`;
+      this.$refs.c.style.top = `${this.originCoordinate[5]}px`;
+      this.$refs.d.style.left = `${this.originCoordinate[6]}px`;
+      this.$refs.d.style.top = `${this.originCoordinate[7]}px`;
+      this.skew(this.originCoordinate, this.originCoordinate);
+    },
+    cancelSkew() {
+      if (this.skewReady) {
+        this.skew(this.originCoordinate, this.originCoordinate)
+      }
+      this.finishSkew()
+    },
+    finishSkew() {
+      this.texture = this.fxCanvas.texture(this.fxCanvas);
+      this.dragTarget = null;
+      this.startDrag = false;
+      this.resetCoordinate();
+      this.skewReady = false;
+      this.showSkewController = false;
     },
     // Filerobot 图形编辑器
     imageEditor() {
@@ -600,13 +762,19 @@ Vue.component("tab-result", {
   },
   data() {
     return {
-
+      editing: false,
+      text: '',
     }
   },
   computed: {
     progressPercent() {
       return `${(this.progress * 100).toFixed(2)}%`
     }
+  },
+  watch: {
+    image() {
+      this.setCanvas();
+    },
   },
   template: `
     <div>
@@ -620,15 +788,45 @@ Vue.component("tab-result", {
         </div>
 
       </div>
-      <div class="mt-3">
-        <img class="thumb border border-3 rounded-3 mx-auto" :src="image">
+      <div class="mt-3 text-center">
+        <canvas class="img-result mw-100" ref="result"></canvas>
       </div>
-      <h2 class="text-center my-3">识别结果</h2>
-      <hr/>
-      <p id="content">{{content}}</p>
+      <div v-show="!editing">
+        <p class="text-center my-3 ">识别结果</p>
+        <hr/>
+        <p id="content">{{content}}</p>
+        <button type="button" class="btn btn-primary mt-3" @click="editContent" :disabled="!content">编辑</button>
+      </div>
 
+      <div class="mt-3" v-show="editing">
+        <textarea class="form-control" id="editing" v-model="text"></textarea>
+      </div>
     </div>
-  `
+  `,
+  methods: {
+    setCanvas() {
+      if (this.image) {
+        let img = new Image();
+        img.src = this.image;
+        img.onload = () => {
+          let width = img.width;
+          let height = img.height;
+          console.log(width, height);
+          this.$refs.result.width = width;
+          this.$refs.result.height = height;
+          let ctx = this.$refs.result.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+        }
+      }
+    },
+    editContent() {
+      this.editing = true;
+      this.text = this.content;
+    }
+  },
+  mounted() {
+    this.setCanvas()
+  }
 });
 
 new Vue({
@@ -654,7 +852,7 @@ new Vue({
       this.worker = Tesseract.createWorker({
         logger: (msg) => {
           // Add logger here
-          // console.log(msg);
+          console.log(msg);
           if (msg.status) {
             this.status = msg.status
           };
@@ -672,6 +870,7 @@ new Vue({
         })
         .then(() => {
           this.status = '引擎初始化结束';
+          this.progress = 0;
           this.initializing = false;
           this.engineReady = true;
         })
@@ -690,6 +889,7 @@ new Vue({
     startOCR(val) {
       this.imageSrc = val;
       this.progress = 0;
+      this.content = '';
       this.worker.recognize(this.imageSrc)
         .then(result => {
           this.content = result.data.text.replace(/\s*/g, "");

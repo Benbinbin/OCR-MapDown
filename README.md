@@ -12,16 +12,17 @@
 * 使用 [Vue.js](https://cn.vuejs.org/) 作为前端框架
 * 使用 [Bootstrap](https://getbootstrap.com/) 作为 UI 框架
 * 使用 [tesseract.js](https://tesseract.projectnaptha.com/) 作为 OCR 引擎
-* 使用 [glfx.js](http://evanw.github.io/glfx.js/) 作为图片编辑器
+* 使用 [glfx.js](http://evanw.github.io/glfx.js/) 和 [Filerobot Image Editor](https://scaleflex.github.io/filerobot-image-editor/) 作为图片编辑器
 
 ## 路线
 - [ ] 增添其他 OCR 引擎
 - [ ] 串接后端数据库，增添保存图片和识别结果功能
 - [ ] 增强图片预处理功能，提高识别率
-    - [ ] 图片扭曲矫正功能
+    - [x] 添加图片裁剪功能
+    - [x] 图片旋转、扭曲矫正功能
     - [ ] 图片自动色彩调整
     - [ ] 多区域框选，分区识别
-- [ ] 增强识别结果编辑器功能
+- [x] 添加结果编辑器功能
 
 ## 参考
 * [JavaScript OCR demo](https://kdzwinel.github.io/JS-OCR-demo/)
